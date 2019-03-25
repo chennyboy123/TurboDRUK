@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <title> TurboDRUK </title>
+    <link rel=stylesheet href=style.css>
+  <h1><img src="ruski.gif" alt="ruski" style="width:300px"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🎉TurboDRUK🎉 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="ruski.gif" alt"ruski" style="width:300px"></h1>
+    <meta charset="utf-8">
+    <style type="text/css">
+
+    text{
+        font-family:Helvetica, Arial, sans-serif;
+        font-size:11px;
+        pointer-events:none;
+    }
+    #chart{
+        position:center;
+        width:500px;
+        height:500px;
+        top:0;
+        left:0;
+        margin:auto;
+        margin-top: 0px;
+
+    }
+    #question{
+        position: top;
+        width:400px;
+        height:500px;
+        top:0;
+        left:520px;
+          margin:auto;
+    }
+    #question p{
+
+
+        font-size: 20px;
+        font-weight: bold;
+        font-family:"sans-serif";
+        position: top;
+        padding: 0;
+        margin: 0;
+        top:80%;
+        margin-top: 60px;
+        margin-left: 0px;
+        margin-right: 0px;
+        -webkit-transform:translate(0,-50%);
+                transform:translate(0,-50%);
+    }
+    </style>
+</head>
+<body>
+    <div id="chart"></div>
+    <div id="question"><p></p></div>
+    <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" charset="utf-8">
+        var padding = {top:20, right:40, bottom:0, left:0},
+            w = 500 - padding.left - padding.right,
+            h = 500 - padding.top  - padding.bottom,
+            r = Math.min(w, h)/2,
+            rotation = 0,
+            oldrotation = 0,
+            picked = 100000,
+            oldpick = [],
+            color = d3.scale.category20();
+        var data = [
+                    {"label":"Druk",  "value":1,  "question":"Mande skål"},
+                    {"label":"Tissekort",  "value":1,  "question":"Du er blevet foræret et tissekort"},
+                    {"label":"Druk",  "value":1,  "question":"Kvinde skål"},
+                    {"label":"Challenge",  "value":1,  "question":"Løb udenfor og drik resten af din genstand"},
+                    {"label":"TurboDRUK",  "value":1,  "question":"Desværre venner, alle skal bunde"},
+                    {"label":"Who is most likely to",  "value":1,  "question":"Hvem kunne finde på at drikke sig så stiv i aften at han/hun ender på hospitalet"},
+                    {"label":"Druk",  "value":1,  "question":"Sniper"},
+                    {"label":"Challenge",  "value":1,  "question":"Udfordre en til øl-stafet"},
+                    {"label":"Druk",  "value":1,  "question":"Stå på hænder og drik 5 tåre"},
+                    {"label":"Challenge", "value":1, "question":"Sten-saks-papir mod en valgfri, hvor taberen skal bunde"},
+                    {"label":"Druk", "value":1, "question":"Giv 5 tåre ud"},
+                    {"label":"Tissekort", "value":1, "question":"Du er blevet foræret et tissekort"},
+                    {"label":"Druk", "value":1, "question":"Drik 5 tåre"},
+                    {"label":"Challenge", "value":1, "question":"Drej rundt om dit glas 10 gange og bund det"},
+                    {"label":"Druk", "value":1, "question":"Drik 3 tåre"},
+                    {"label":"Challenge", "value":1, "question":"Udfordre en til øl-stafet"},
+                    {"label":"Druk", "value":1, "question":"Giv 3 tåre ud"},
+                    {"label":"Ultimativt", "value":1, "question":"Drik 5 tåre hver minut i 20 minutter"},
+                    {"label":"Druk", "value":1, "question":"Den mindst fulde skal tage 5 tåre de næst 4 runder"},
+                    {"label":"Challenge", "value":1, "question":"Du bestemmer hvad en vilkårlig person skal hedde, og hvis der en der kommer til at sige personens normale navn, så skal de drikke 5 tåre"},
+                    {"label":"TurboDRUK", "value":1, "question":"Bund dit glas"},
+                    {"label":"Who is most likely to", "value":1, "question":"Den der kan drikke mest skal drikke 5 tåre"},
+                    {"label":"Druk", "value":1, "question":"Drik 6 tåre"},
+                    {"label":"Challenge", "value":1, "question":"Byt et stykke tøj med den der sidder til venstre for dig"},
+                    {"label":"Druk", "value":1, "question":"Byt glas med personen til højre for dig, og derefter skal i begge bunde"},
+                    {"label":"Tissekort", "value":1, "question":"Du er blevet foræret et tissekort"},
+                    {"label":"TurboDRUK", "value":1, "question":"Drik så mange tåre, som du er år gammel, max 30"},
+                    {"label":"Challenge", "value":1, "question":"Udfordre til en 2v2 flip-a-cup, hvor du bestemmer holdene, hvor taberne skal spille øl-stafet mod hinanden"},
+                    {"label":"TurboDRUK", "value":1, "question":"Lav en shotgun"},
+                    {"label":"Challenge", "value":1, "question":"Udfordre en til at drikke om kap med en halv øl hver, hvor vinderen er den der først er færdig eller hvis den anden giver op. Taberen skal drikke 2 genstande i løbet af 10 min udover det sædvanlige"},
+        ];
+        var svg = d3.select('#chart')
+            .append("svg")
+            .data([data])
+            .attr("width",  w + padding.left + padding.right)
+            .attr("height", h + padding.top + padding.bottom);
+        var container = svg.append("g")
+            .attr("class", "chartholder")
+            .attr("transform", "translate(" + (w/2 + padding.left) + "," + (h/2 + padding.top) + ")");
+        var vis = container
+            .append("g");
+
+        var pie = d3.layout.pie().sort(null).value(function(d){return 1;});
+        var arc = d3.svg.arc().outerRadius(r);
+        var arcs = vis.selectAll("g.slice")
+            .data(pie)
+            .enter()
+            .append("g")
+            .attr("class", "slice");
+
+        arcs.append("path")
+            .attr("fill", function(d, i){ return color(i); })
+            .attr("d", function (d) { return arc(d); });
+        arcs.append("text").attr("transform", function(d){
+                d.innerRadius = 0;
+                d.outerRadius = r;
+                d.angle = (d.startAngle + d.endAngle)/2;
+                return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")translate(" + (d.outerRadius -10) +")";
+            })
+            .attr("text-anchor", "end")
+            .text( function(d, i) {
+                return data[i].label;
+            });
+        container.on("click", spin);
+        function spin(d){
+
+            container.on("click", null);
+            console.log("OldPick: " + oldpick.length, "Data length: " + data.length);
+            if(oldpick.length == data.length){
+                console.log("done");
+                container.on("click", null);
+                return;
+            }
+            var  ps       = 360/data.length,
+                 pieslice = Math.round(1440/data.length),
+                 rng      = Math.floor((Math.random() * 1440) + 360);
+
+            rotation = (Math.round(rng / ps) * ps);
+
+            picked = Math.round(data.length - (rotation % 360)/ps);
+            picked = picked >= data.length ? (picked % data.length) : picked;
+            if(oldpick.indexOf(picked) !== -1){
+                d3.select(this).call(spin);
+                return;
+            } else {
+                oldpick.push(picked);
+            }
+            rotation += 90 - Math.round(ps/2);
+            vis.transition()
+                .duration(7000)
+                .attrTween("transform", rotTween)
+                .each("end", function(){
+                    d3.select(".slice:nth-child(" + (picked + 1) + ") path")
+                        .attr("fill", "#111");
+                    d3.select("#question p")
+                        .text(data[picked].question);
+                    oldrotation = rotation;
+
+                    container.on("click", spin);
+                });
+        }
+        svg.append("g")
+            .attr("transform", "translate(" + (w + padding.left + padding.right) + "," + ((h/2)+padding.top) + ")")
+            .append("path")
+            .attr("d", "M-" + (r*.15) + ",0L0," + (r*.05) + "L0,-" + (r*.05) + "Z")
+            .style({"fill":"black"});
+        container.append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 60)
+            .style({"fill":"white","cursor":"pointer"});
+        container.append("text")
+            .attr("x", 0)
+            .attr("y", 15)
+            .attr("text-anchor", "middle")
+            .text("SPIN")
+            .style({"font-weight":"bold", "font-size":"30px"});
+
+
+        function rotTween(to) {
+          var i = d3.interpolate(oldrotation % 360, rotation);
+          return function(t) {
+            return "rotate(" + i(t) + ")";
+          };
+        }
+
+
+        function getRandomNumbers(){
+            var array = new Uint16Array(1000);
+            var scale = d3.scale.linear().range([360, 1440]).domain([0, 100000]);
+            if(window.hasOwnProperty("crypto") && typeof window.crypto.getRandomValues === "function"){
+                window.crypto.getRandomValues(array);
+                console.log("works");
+            } else {
+                for(var i=0; i < 1000; i++){
+                    array[i] = Math.floor(Math.random() * 100000) + 1;
+                }
+            }
+            return array;
+        }
+    </script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+
+        <script type="text/javascript">
+            function playRandomSong() {
+                var songs = [
+                    'zenzyg.mp3',
+                    'tripoloski.mp3',
+                    'jeppek.mp3',
+                    'ole.mp3',
+                    'bask.mp3',
+                ];
+
+                var songIndex = Math.floor(Math.random() * songs.length);
+                $('#song-name').text('Playing ' + songs[songIndex]);
+                $('#song-source').prop('src', songs[songIndex]);
+                var audio = $('#song-audio')[0];
+                audio.pause();
+                audio.load();
+                audio.play();
+            }
+            $(function() {
+                playRandomSong();
+                $('#song-audio').on('ended', function() {
+                    playRandomSong();
+                });
+                $('#song-play-random').on('click', playRandomSong);
+            });
+        </script>
+    </head>
+
+    <body>
+
+
+        <audio id="song-audio">
+            <source id="song-source" />
+        </audio>
+
+        <br />
+
+        <audio loop autoplay id="song-play-random">Random Song!</audio>
+
+    </body>
+    <h4>
+    <div class="row">
+  <div class="column">
+    <img src="ruski2.gif" alt="Dance 1" style="width:100%">
+  </div>
+  <div class="column">
+    <img src="ruski3.gif" alt="Dance 2" style="width:100%">
+  </div>
+  <div class="column">
+    <img src="ruski4.gif" alt="Dance 3" style="width:100%">
+  </div>
+</div>
+</h4>
+    <!-- Site footer -->
+      <footer class="site-footer">
+        <div class="container">
+          <div class="row">
+            <div class="col-sm-12 col-md-6">
+              <h6>Om os</h6>
+              <h6 class="text-justify">TurboDRUK er <i>"fremtidens drukspil" </i> og vi er en gruppe drenge der søgte et bedre og mere brugervenligt drukspil, hvilket er grunden til vi har lavet hjemmesiden.</h6>
+            </div>
+
+            <div class="col-xs-6 col-md-3">
+              <h6>Vores instagrams:</h6>
+              <ul class="footer-links">
+                <li><a href="https://www.instagram.com/chenmoerk/"target="_blank">Chen</a></li>
+                <li><a href="http://egelundsparken.dk/alboa/vicevaert"target="_blank">Magnus</a></li>
+                <li><a href="https://www.instagram.com/frederik_sternberg/"target="_blank">Freddy</a></li>
+                <li><a href="https://www.instagram.com/christoffer_stevnss/"target="_blank">Chrissy</a></li>
+              </ul>
+            </div>
+
+            <div class="col-xs-6 col-md-3">
+              <h6>Kontakt:</h6>
+              <ul class="footer-links">
+                <li><a href="mailto:turbodrukofficialwebsite@gmail.com">E-mail</a></li>
+                <li><a href="https://www.mobilepay.dk/erhverv/betalingslink/betalingslink-svar?phone=52403399&amount=10&comment=Tak%20for%20st%C3%B8tten&lock=1"target="_blank">Doner til os</a></li>
+                <li><a href="https://www.facebook.com/Turbodruk-334978267127964/?modal=admin_todo_tour" target="_blank">Facebook</a></li>
+                <li><a href="https://twitter.com/DrukTurbo"target="_blank">Twitter</a></li>
+                <li><a href="https://www.instagram.com/turbodrukofficialwebsite/"target="blank">Instagram</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="container">
+          <div class="row">
+            <div class="col-md-8 col-sm-6 col-xs-12">
+              <h6 class="copyright-text">Copyright &copy; 2019 All Rights Reserved by TurboDRUK
+         </h6>
+            </div>
+          </div>
+        </div>
+  </footer>
+  <div style="position:relative;min-width:960px">
+ <img src="logo.png" img style="position: fixed; top: 0; left: 0; border: 0;"
+</div>
+</body>
+</html>
